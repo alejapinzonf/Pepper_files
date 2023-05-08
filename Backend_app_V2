@@ -1,0 +1,118 @@
+#! /usr/bin/env python
+# -*- encoding: UTF-8 -*-
+
+import qi
+import argparse
+import sys
+import almath
+import math
+import motion
+import time
+
+
+def navegationfreezone(posture_service, navigation_service, motion_service):
+
+    posture_service.goToPosture("StandInit", 0.5)
+    navigation_service.startFreeZoneUpdate()
+    motion_service.moveTo(0.0, 0.0, 2.0 * math.pi)
+    desiredRadius = 0.6
+    displacementConstraint = 0.5
+    result = navigation_service.findFreeZone(desiredRadius, displacementConstraint)
+
+    errorCode = result[0]
+    if errorCode != 1:
+        worldToCenterFreeZone = almath.Pose2D(result[2][0], result[2][1], 0.0)
+        worldToRobot = almath.Pose2D(motion_service.getRobotPosition(True))
+        robotToFreeZoneCenter = almath.pinv(worldToRobot) * worldToCenterFreeZone
+        motion_service.moveTo(robotToFreeZoneCenter.x, robotToFreeZoneCenter.y, 0.0)
+    else :
+        print ("Problem during the update of the free zone.")
+
+def dab(motion_service, speech_service):
+    JointNamesL = ["LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll"]
+    JointNamesR = ["RShoulderPitch", "RShoulderRoll", "RElbowYaw", "RElbowRoll"]
+    JointNamesH = ["HeadPitch","HeadYaw"] 
+    ArmL1 = [-50,  30, 0, 0]
+    ArmL1 = [ x * motion.TO_RAD for x in ArmL1]
+    ArmR1 = [-50,  30, 0, 40]
+    ArmR1 = [ x * motion.TO_RAD for x in ArmR1]
+    ArmR2 = [-40,  50, 0, 80]
+    ArmR2 = [ x * motion.TO_RAD for x in ArmR2]
+    pFractionMaxSpeed = 0.5
+    HeadA = [0.1,0.3]
+    motion_service.angleInterpolationWithSpeed(JointNamesL, ArmL1, pFractionMaxSpeed)
+    motion_service.angleInterpolationWithSpeed(JointNamesR, ArmR1, pFractionMaxSpeed)
+    motion_service.angleInterpolationWithSpeed(JointNamesR, ArmR2, pFractionMaxSpeed)
+    motion_service.angleInterpolationWithSpeed(JointNamesH, HeadA, pFractionMaxSpeed)
+    speech_service.say("Dabb !")
+
+    return
+
+def speech(animated_speech_service):
+    text=str(input())
+    animated_speech_service.say(text)
+
+def main(session):
+    navigation_service = session.service("ALNavigation")
+    motion_service = session.service("ALMotion")
+    posture_service = session.service("ALRobotPosture")
+    speech_service = session.service("ALTextToSpeech") 
+    animated_speech_service = session.service("ALAnimatedSpeech") 
+    behavior_service = session.service("ALBehaviorManager")
+    tablet_service = session.service("ALTabletService") 
+    audio_service = session.service("ALAudioDevice")
+    system_service = session.service("ALSystem")
+    camara_service = session.service("ALVideoDevice")
+
+    a=0
+
+    while a ==0:
+        print("Menu\n 1.Speech\n2.Navegation\n3.Ask\n4.Move\n5.Settings\n6.Exit")
+        menu=input()
+        
+        if menu == 1:
+            print("Speech")
+            speech(animated_speech_service)
+        elif menu == 2:
+            print("Navegation")
+            navegationfreezone(posture_service, navigation_service, motion_service)
+        elif menu == 3:
+            print("Ask")
+        elif menu == 4:
+            print("Move (prueba dab)")
+            motion_service.wakeUp()
+            posture_service.goToPosture("StandInit", 0.5)
+            dab(motion_service, speech_service)
+            time.sleep(3)
+            motion_service.rest()
+        elif menu == 5:
+            menu_settings=input()
+            if menu_settings == 1:
+                print("noc")
+            elif menu_settings == 2:
+                print("\n NO c")
+            elif menu_settings == 3:
+                print("Seguro desea reiniciar (S) Si (N) No")
+                menu_reboot=input()
+                print(menu_reboot)
+            elif menu_settings == 4:
+                print("Seguro desea apagar (S) Si (N) No")
+                menu_power=input()
+                print(menu_power)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip", type=str, default="192.168.0.103",
+                        help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
+    parser.add_argument("--port", type=int, default=9559,
+                        help="Naoqi port number")
+
+    args = parser.parse_args()
+    session = qi.Session()
+    try:
+        session.connect("tcp://" + args.ip + ":" + str(args.port))
+    except RuntimeError:
+        print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
+               "Please check your script arguments. Run with -h option for help.")
+        sys.exit(1)
+    main(session)
