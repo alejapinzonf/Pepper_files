@@ -8,7 +8,26 @@ import almath
 import math
 import motion
 import time
+import os
 
+def tablet(tablet_service):
+    os.system ("clear") 
+    i=0
+    j=0
+    while j==0:
+        print("Seleccione la opcion que desea:\n1. Mostrar una imagen en la tablet de Pepper\n2. Mostrar un video\n3. Abrir Google \n4. Salir")
+        i=input()
+        if i==1:
+            print("Ya va 1")
+        elif i==2:
+            print("Ya va")
+        elif i==3:
+            tablet_service.showWebview("https://www.google.com/")
+        elif i==4:
+            j=1
+        else:
+            print("Opcion no valida")
+    
 
 def navegationfreezone(posture_service, navigation_service, motion_service):
 
@@ -26,7 +45,7 @@ def navegationfreezone(posture_service, navigation_service, motion_service):
         robotToFreeZoneCenter = almath.pinv(worldToRobot) * worldToCenterFreeZone
         motion_service.moveTo(robotToFreeZoneCenter.x, robotToFreeZoneCenter.y, 0.0)
     else :
-        print ("Problem during the update of the free zone.")
+        print ("No se actualizo la zona libre")
 
 def dab(motion_service, speech_service):
     JointNamesL = ["LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll"]
@@ -45,7 +64,6 @@ def dab(motion_service, speech_service):
     motion_service.angleInterpolationWithSpeed(JointNamesR, ArmR2, pFractionMaxSpeed)
     motion_service.angleInterpolationWithSpeed(JointNamesH, HeadA, pFractionMaxSpeed)
     speech_service.say("Dabb !")
-
     return
 
 def speech(animated_speech_service):
@@ -106,13 +124,11 @@ if __name__ == "__main__":
                         help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
     parser.add_argument("--port", type=int, default=9559,
                         help="Naoqi port number")
-
     args = parser.parse_args()
     session = qi.Session()
     try:
         session.connect("tcp://" + args.ip + ":" + str(args.port))
     except RuntimeError:
-        print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
+        print ("Problema al conectarse\"" + args.ip + "\" en el puerto " + str(args.port))
         sys.exit(1)
     main(session)
