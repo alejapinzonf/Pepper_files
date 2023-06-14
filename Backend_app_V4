@@ -1,0 +1,390 @@
+#! /usr/bin/env python
+# -- encoding: UTF-8 --
+
+import qi
+import os
+import sys
+import math
+import time
+import almath
+import motion
+import argparse
+
+def tablet(tablet_service):
+	os.system ("clear")
+	i=0
+	j=0
+	while j==0:
+		print("Seleccione la opcion que desea:\n1. Mostrar una imagen en la tablet de Pepper\n2. Mostrar un video\n3. Abrir Google \n4. Salir")
+		i=input()
+		if i==1:
+			image_path = raw_input("Indique la URL de la imagen")
+			tablet_service.showImage(image_path)        
+		elif i==2:
+			video_path = raw_input("Indique la URL del video")
+			tablet_service.playVideo(video_path)
+		elif i==3:
+			tablet_service.showWebview("https://www.google.com/")
+		elif i==4:
+			j=1
+		else:
+			print("Opcion no valida")
+def navegationfreezone(posture_service, navigation_service, motion_service):
+	posture_service.goToPosture("StandInit")
+	navigation_service.startFreeZoneUpdate()
+	motion_service.moveTo(0.0, 0.0, 2.0 * math.pi)
+	desiredRadius = 0.6
+	displacementConstraint = 0.5
+	result = navigation_service.findFreeZone(desiredRadius, displacementConstraint)
+
+	errorCode = result[0]
+	if errorCode != 1:
+		worldToCenterFreeZone = almath.Pose2D(result[2][0], result[2][1], 0.0)
+		worldToRobot = almath.Pose2D(motion_service.getRobotPosition(True))
+		robotToFreeZoneCenter = almath.pinv(worldToRobot) * worldToCenterFreeZone
+		motion_service.moveTo(robotToFreeZoneCenter.x, robotToFreeZoneCenter.y, 0.0)
+	else :
+		print ("No se actualizo la zona libre")
+    
+def dab(motion_service, speech_service):
+	JointNamesL = ["LShoulderPitch", "LShoulderRoll", "LElbowYaw", "LElbowRoll"]
+	JointNamesR = ["RShoulderPitch", "RShoulderRoll", "RElbowYaw", "RElbowRoll"]
+	JointNamesH = ["HeadPitch","HeadYaw"]
+	ArmL1 = [-50,  30, 0, 0]
+	ArmL1 = [ x * motion.TO_RAD for x in ArmL1]
+	ArmR1 = [-50,  30, 0, 40]
+	ArmR1 = [ x * motion.TO_RAD for x in ArmR1]
+	pFractionMaxSpeed = 0.5
+	HeadA = [0.1,0.3]
+	motion_service.angleInterpolationWithSpeed(JointNamesL, ArmL1, pFractionMaxSpeed)
+	motion_service.angleInterpolationWithSpeed(JointNamesR, ArmR1, pFractionMaxSpeed)
+	motion_service.angleInterpolationWithSpeed(JointNamesH, HeadA, pFractionMaxSpeed)
+	time.sleep(5)
+	return
+def speech(animated_speech_service):
+  os.system ("clear")
+	texto = raw_input("Introduce un texto: ")
+	animated_speech_service.say(" " + texto)
+def pos_menu(behavior_service, posture_service, animation_player_service):
+	os.system ("clear")
+	d=0
+	while d==0:
+		print("Menu\n1. Speech\n2. Navegation\n3. Ask\n4. Move\n5. Tablet\n6.Camara\n7. Settings\n8. Wake UP\n9. Sleep\n10. Exit")
+		menu_move=input()
+		if menu_move == 1:
+			os.system ("clear")
+			print("\n1.Postura Estandar \n2. Postura Zero \n3. Crouch \n4. Salir")
+			postura_menu=input()
+			if postura_menu == 1:
+				posture_service.goToPosture("StandInit", 0.5)
+			elif postura_menu == 2:
+				posture_service.goToPosture("StandZero", 0.5)
+			elif postura_menu == 3:
+				posture_service.goToPosture("Crouch", 0.5)
+			elif postura_menu == 4:
+				k=1
+			else:
+				print("Ha escrito un número negativo")
+
+		elif menu_move == 2:
+      os.system ("clear")
+			print("Saludos\n1.Saludo 1 \n2.Saludo 2 \n3.Saludo 3 \n4. Saludo 4 ")
+			saludo_menu=input()
+			if saludo_menu == 1:
+				animation_player_service.run("animations/Stand/Gestures/Hey_1")
+			elif saludo_menu == 2:
+				animation_player_service.run("animations/Stand/Gestures/Hey_3")
+			elif saludo_menu == 3:
+				animation_player_service.run("animations/Stand/Gestures/Hey_4")
+			elif saludo_menu == 4:
+				animation_player_service.run("animations/Stand/Gestures/Hey_6")
+			else:
+				print("Opcion Invalida")
+		elif menu_move == 3:
+			b=0
+			while b==0:
+				os.system ("clear")
+				print("Saludas \n1. Feliz\n2. Tranquilidad\n 3. Pensando\n 4. Desesperado\n 5. Nervioso \n6. Apenado \n7. Salir")
+				estado_menu=input()
+				if estado_menu == 1:
+          os.system ("clear")
+					print("Menu \n1. Entuciasmado 1 \n2. Entuciasmado 2\n3. Feliz 1\n4. Histerico")
+					feliz_menu=input()
+					if feliz_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/Enthusiastic_4")
+					elif feliz_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/Enthusiastic_5")
+					elif feliz_menu == 3:
+						animation_player_service.run("animations/Stand/Emotions/Positive/Happy_4")
+					elif feliz_menu == 4:
+						animation_player_service.run("animations/Stand/Emotions/Positive/Hysterical_1")
+					else:
+						print("Opcion Invalida")
+				elif estado_menu == 2:
+					os.system ("clear")
+					print("\nMenu\n1. Tranquilo 1\n2. Tranquilo 2\n3. Tranquilo 3")
+					tranquilo_menu=input()
+					if tranquilo_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/CalmDown_1")
+					elif tranquilo_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/CalmDown_5")
+					elif tranquilo_menu == 3:
+						animation_player_service.run("animations/Stand/Gestures/CalmDown_6")
+					else:
+						print("Opcion Invalida")
+				elif estado_menu == 3:
+					os.system ("clear")	
+					print("Menu\n1. Pensando 1\n2, Pensando 2\n3. Pensando 3\n4. Pensando 4\n5. Pensando 5 \n5. Pensado 6\n6. Pensando 7\n7. Penando 8")
+					pensando_menu=input()
+					if pensando_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/Thinking_1")
+					elif pensando_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/Thinking_3")
+					elif pensando_menu == 3:
+						animation_player_service.run("animations/Stand/Gestures/Thinking_4")
+					elif pensando_menu == 4:
+						animation_player_service.run("animations/Stand/Gestures/Thinking_6")
+					elif pensando_menu == 5:
+						animation_player_service.run("animations/Stand/Gestures/Thinking_8")
+					elif pensando_menu == 6:
+						animation_player_service.run("animations/Stand/Waiting/Think_1")
+					elif pensando_menu == 7:
+						animation_player_service.run("animations/Stand/Waiting/Think_2")
+					elif pensando_menu == 8:
+						animation_player_service.run("animations/Stand/Waiting/Think_3")
+					else:
+						print("Opcion Invalida")
+				elif estado_menu == 4:
+					os.system ("clear")
+					print("Menu\n1. Desesperado 1\n 2. Desesperado 2 \n3. Desesperado 3\n Desesperado 4")
+					des_menu=input()
+					if des_menu==1:
+						animation_player_service.run("animations/Stand/Gestures/Desperate_1")
+					elif des_menu==2:
+						animation_player_service.run("animations/Stand/Gestures/Desperate_2")
+					elif des_menu==3:
+						animation_player_service.run("animations/Stand/Gestures/Desperate_4")
+					elif des_menu==4:
+						animation_player_service.run("animations/Stand/Gestures/Desperate_5")
+					else:
+						print("Opcion Invalida")
+				elif estado_menu == 5:
+					animation_player_service.run("animations/Stand/Gestures/Excited_1")
+				elif estado_menu == 6:
+					animation_player_service.run("animations/Stand/Emotions/Neutral/Embarrassed_1")
+				elif estado_menu ==7:
+					b=1
+				else:
+					print("Opcion Invalida")
+		elif menu_move == 4:
+			c=0
+			while c==0:
+				os.system ("clear")
+				print("Menu\n1. Si \n2. No \n3. Si entiendo \n4. No entiendo\n5. Salir")
+				respuesta_menu=input()
+				if respuesta_menu == 1:
+					print("Menu\n1. Si 1\n2. Si 2 \n3. Si 3")
+					si_menu=input()
+					if si_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/Yes_1")
+					elif si_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/Yes_2")
+					elif si_menu == 3:
+						animation_player_service.run("animations/Stand/Gestures/Yes_3")
+					else:
+						print("Opcion Invalida")
+				elif respuesta_menu == 2:
+					os.system ("clear")
+					print("Menu\n1. No 1\n2. No 2\n3. No 3\n4. Ninguno")
+					no_menu=input()
+					if no_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/No_1")
+					elif no_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/No_2")
+					elif no_menu == 3:
+						animation_player_service.run("animations/Stand/Gestures/No_3")
+					elif no_menu == 4:
+						animation_player_service.run("animations/Stand/Gestures/Nothing_2")
+					else:
+						print("Opcion Invalida")
+				elif respuesta_menu ==3:
+					os.system ("clear")
+					print("Menu\n1. Entiendo 1\n2. Entiendo 2 \n3. Entiendo 3\n4. Entiendo")
+					entender_menu=input()
+					if entender_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/YouKnowWhat_1")
+					elif entender_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/YouKnowWhat_2")
+					elif entender_menu == 3:
+						animation_player_service.run("animations/Stand/Gestures/YouKnowWhat_3")
+					elif entender_menu == 4:
+						animation_player_service.run("animations/Stand/Gestures/YouKnowWhat_5")
+					else:
+						print("Opcion Invalida")
+				elif respuesta_menu ==4:
+					os.system ("clear")
+					print("Menu\n1. No Entiendo 1\n2. No Entiendo 2 \n3. No Entiendo 3\n4. No Entiendo")
+					no_entender_menu=input()
+					if entender_menu == 1:
+						animation_player_service.run("animations/Stand/Gestures/IDontKnow_1")
+					elif no_entender_menu == 2:
+						animation_player_service.run("animations/Stand/Gestures/IDontKnow_2")
+					elif no_entender_menu == 3:
+						animation_player_service.run("animations/Stand/Gestures/IDontKnow_3")
+					else:
+						print("Opcion Invalida")
+
+				elif respuesta_menu == 5:
+					c=1
+				else:
+					print("Opcion Invalida")
+		elif menu_move == 5:
+			animation_player_service.run("animations/Stand/Gestures/Please_1")
+		elif menu_move == 6:
+			d=1
+		else:
+			print("Opcion Invalida")
+def main(session):
+	navigation_service = session.service("ALNavigation")
+	motion_service = session.service("ALMotion")
+	posture_service = session.service("ALRobotPosture")
+	speech_service = session.service("ALTextToSpeech")
+	speech_recognition_service = session.service("ALSpeechRecognition")
+	animated_speech_service = session.service("ALAnimatedSpeech")
+	behavior_service = session.service("ALBehaviorManager")
+	tablet_service = session.service("ALTabletService")
+	animation_player_service = session.service("ALAnimationPlayer")
+	audio_service = session.service("ALAudioDevice")
+	system_service = session.service("ALSystem")
+	camara_service = session.service("ALVideoDevice")
+	photo_service = session.service("ALPhotoCapture")
+	a=0
+	while a ==0:
+		print("Menu\n1. Speech\n2. Navegation\n3. Ask\n4. Move\n5. Tablet\n6.Camara\n7. Settings\n8. Wake UP\n9. Sleep\n10. Exit")
+		menu=input()
+		if menu == 1:
+			print("Speech")
+			speech(animated_speech_service)
+		elif menu == 2:
+      os.system ("clear")
+			print("Navegation")
+			print("     |w|     \n |a| |s| |d|      |x|")
+			p=0
+			while p==0:
+				print("Pulse las flechas para mover a pepper")
+				mover=raw_input()
+				if mover == "w":
+					X = 0.5  
+					Y = 0.0
+					Theta = 0.0
+					amnt = 1.0
+					motion_service.moveToward(X, Y, Theta)
+					time.sleep(float(amnt))
+					motion_service.stopMove()
+				elif mover=="s":
+					X = -0.5  
+					Y = 0.0
+					Theta = 0.0
+					amnt = 1.0
+					motion_service.moveToward(X, Y, Theta)
+					time.sleep(float(amnt))
+					motion_service.stopMove()
+				elif mover=="a":
+					X = 0.0
+					Y = 0.0
+					Theta = -1.0
+					amnt = 1.0
+					motion_service.moveToward(X, Y, Theta)
+					time.sleep(float(amnt))
+					motion_service.stopMove()
+				elif mover=="d":
+					X = 0.0
+					Y = 0.0
+					Theta = 1.0
+					amnt = 1.0
+					motion_service.moveToward(X, Y, Theta)
+					time.sleep(float(amnt))
+					motion_service.stopMove()
+				elif mover=="x":
+					p=1
+				else: 
+					motion_service.stopMove()
+		elif menu == 3:
+			print("Ask")    
+			animated_speech_service.say("Aun no tengo esta funcion disponible, estoy en proceso de aprendizaje para poder resolver todas tus preguntas, vuelve pronto")
+		elif menu == 4:
+			pos_menu(behavior_service, posture_service, animation_player_service )
+		elif menu == 5:
+			tablet(tablet_service)
+		elif menu == 6:
+			photo_service.setResolution(2)
+			photo_service.setPictureFormat("jpg")
+			photo_service.takePictures(1, "/home/nao/recordings/cameras/", "image")
+			tablet_service.showImage("http://198.18.0.1/home/nao/recordings/cameras/image.jpg")
+			animated_speech_service.say("Foto tomada, esta guardada en camaras de mi carpeta de recording")
+		elif menu == 7:   
+			print("Settings\n1.Language\n2.Volumen\n3.Reboot\n4.Shutdown")
+			menu_settings=input()
+			if menu_settings == 1:
+				print("Seleccione el idioma\n1. Español\n2. English\n3. Francais")
+				menu_language =input()
+				if menu_language == 1:
+					motion_service.rest()
+					speech_recognition_service.setLanguage("Spanish")
+					speech_service.setLanguage("Spanish")
+					animated_speech_service.setLanguage("Spanish")
+					motion_service.wakeUp()
+				elif menu_language == 2:
+					motion_service.rest()
+					speech_recognition_service.setLanguage("English")
+					speech_service.setLanguage("English")
+					animated_speech_service.setLanguage("English")
+					motion_service.wakeUp()
+				elif menu_language == 3:
+					motion_service.rest()
+					speech_recognition_service.setLanguage("French")
+					speech_service.setLanguage("French")
+					animated_speech_service.setLanguage("French")
+					motion_service.wakeUp()
+
+			elif menu_settings == 2:
+				print("\n Volumen")
+			elif menu_settings == 3:
+				print("Si desea reiniciar por favor presione la tecla s, de lo contrario pulse otra tecla")
+				menu_reboot=raw_input()
+				if (menu_reboot == 'S' or salir == 's'):
+					system_service.reboot()
+			elif menu_settings == 4:
+				print("Si desea reiniciar por favor presione la tecla s, de lo contrario pulse otra tecla")
+				menu_power=raw_input()
+				if (menu_power == 'S' or salir == 's'):
+					system_service.shutdown()
+
+		elif menu==8:
+			motion_service.wakeUp()
+		elif menu==9:
+			motion_service.rest()
+		elif menu==10:
+			salir=0
+			print("Si desea salir por favor presione la tecla s, de lo contrario pulse otra tecla")
+			salir=raw_input()
+			if (salir == "S" or salir == "s"):
+				a=1
+		else: 
+			print("\nOpcion no valida")
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--ip", type=str, default="192.168.0.112",
+						help="La IP de Pepper. Ambos deben estar conectados a la misma red")
+	parser.add_argument("--port", type=int, default=9559,
+						help="Siempre va a ser el mismo 9559")
+	args = parser.parse_args()
+	session = qi.Session()
+	try:
+		session.connect("tcp://" + args.ip + ":" + str(args.port))
+	except RuntimeError:
+		print ("Problema al conectarse\"" + args.ip + "\" en el puerto " + str(args.port))
+		sys.exit(1)
+	main(session)
+
