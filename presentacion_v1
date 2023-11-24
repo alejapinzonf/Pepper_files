@@ -1,0 +1,62 @@
+
+import qi
+import argparse
+import sys
+import almath
+import math
+import motion
+import time
+import os
+
+session = qi.Session()
+session.connect("tcp://192.168.0.106:9559")
+
+navigation_service = session.service("ALNavigation")
+motion_service = session.service("ALMotion")
+posture_service = session.service("ALRobotPosture")
+audio_service = session.service("ALAudioDevice")
+system_service = session.service("ALSystem")
+tablet_service = session.service("ALTabletService")
+animation_player_service = session.service("ALAnimationPlayer")
+animated_speech_service = session.service("ALAnimatedSpeech")
+behavior_service = session.service("ALBehaviorManager")
+audio_player_service = session.service("ALAudioPlayer")
+
+a=1
+while a==1:
+    tablet_service.showImage("http://192.168.0.105/1.jpg")
+    animated_speech_service.say("Hola a todos, soy Pepper, y quiero que todos conozcan mas acerca de nosotros")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/logo.jpeg")
+    animated_speech_service.say("En la facultad de Ingenieria electronica, hemos realizado muchos trabajos")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/4.jpeg")
+    animated_speech_service.say("Este proyecto fue en Cerro Matoso que es una de las minas mas grandes del mundo, donde la facultad realizo el analisis estructural de una planta minero energetica")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/cuarta_foto.jpeg")
+    animated_speech_service.say("La facultad fue sede de dos competencias de Reto Universal de Robotica")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/quinta_foto.jpeg")
+    animated_speech_service.say("Tambien tenemos un programa de radio llamado Electrojerz, en el que hablamos diferentes temas interesantes, con profesores, estudiantes y demas invitados")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/sexta_foto.jpeg")
+    animated_speech_service.say("En el ultimo semestre academico, vemos una materia llamada Seminario de Actualizacion, esto incluye visitas a diferentes empresas para que los estudiantes aprendan sobre el mundo laboral")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/primera_foto.jpeg")
+    animated_speech_service.say("La facultad entrego la primera parte del proyecto al consejo de estado. El proyecto se llama Titulacion Automatica de Providencias en la relatoria del Consejo de Estado aplicando tecnicas de aprendizaje de maquina")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/decima_foto.jpeg")
+    animated_speech_service.say("Tambien ofrecemos diplomados en transformacion digital en colaboracion con la alca-ia distrital")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/once_foto.jpeg")
+    animated_speech_service.say("Tambien registramos la patente de un respirador artificial")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/doceava_foto.jpeg")
+    animated_speech_service.say("ademas, el INCI que es el Instituto Nacional para Ciegos recibio el apoyo de la facultad")
+    time.sleep(2)
+    tablet_service.showImage("http://192.168.0.105/oct_foto.jpeg")
+    animated_speech_service.say("otro de los proyectos que realiza la facultad es impartir diplomados en robotica para ninios")
+    time.sleep(2)
+    tablet_service.showIMage("http://192.168.0.105/logo.jpeg")
+    time.sleep(5)
+
